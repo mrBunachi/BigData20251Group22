@@ -1,29 +1,5 @@
 [
   {
-    "Tên công ty": "CÔNG TY TNHH MỘT THÀNH VIÊN ATHENA HUB",
-    "Mức lương": "30 - 45 triệu",
-    "Địa điểm": "Hồ Chí Minh",
-    "Kinh nghiệm": "4 năm",
-    "Mô tả công việc": "Develop, optimize, and maintain high-quality web applications using ReactJS, NextJS and modern frontend technologies.\nCollaborate with UI/UX designers to deliver responsive, user-friendly, and accessible interfaces.\nIntegrate APIs and work closely with backend engineers to ensure seamless end-to-end solutions.\nWrite clean, reusable, and well-documented code following best practices.\nContribute to architectural discussions, technical decisions, and system design.\nEnsure application performance, scalability, and cross-browser compatibility.\nConduct code reviews, share knowledge, and mentor junior developers when needed.\nStay updated with the latest frontend trends and proactively suggest improvements.",
-    "Yêu cầu ứng viên": "Develop, optimize, and maintain high-quality web applications using ReactJS,\nNextJS, and modern frontend technologies.\nCollaborate with UI/UX designers to deliver responsive, user-friendly, and accessible\ninterfaces.\nIntegrate APIs and work closely with backend engineers to ensure seamless\nend-to-end solutions.\nWrite clean, reusable, and well-documented code following best practices.\nContribute to architectural discussions, technical decisions, and system design.\nEnsure application performance, scalability, SEO optimization, and cross-browser\ncompatibility.\nConduct code reviews, share knowledge, and mentor junior developers when needed.\nStay updated with the latest frontend trends and proactively suggest improvements.",
-    "Quyền lợi": "14-months salary package, full salary during probation\nSocial insurance based on gross salary\nMacBook & Monitor provided\nLunch & transportation allowances\nStartup environment: dynamic, collaborative, growth-oriented\nLeave & holidays: in accordance with state regulations\nTeam building, company trips & regular activities",
-    "Địa điểm làm việc": "- Hồ Chí Minh: 21 Vo Truong Toan, Quận 2",
-    "Thời gian làm việc": "Thứ 2 - Thứ 6 (từ 08:00 đến 17:30)\nnghỉ trưa từ 12h - 13h30",
-    "Cách thức ứng tuyển": "Ứng viên nộp hồ sơ trực tuyến bằng cách bấm\nỨng tuyển\nngay dưới đây."
-  },
-  {
-    "Tên công ty": "CÔNG TY CỔ PHẦN THƯƠNG MẠI ĐIỆN TỬ BẢO KIM",
-    "Mức lương": "15 - 25 triệu",
-    "Địa điểm": "Hà Nội",
-    "Kinh nghiệm": "2 năm",
-    "Mô tả công việc": "- Phát triển các tính năng cho các dịch vụ trong Công ty, sử dụng PHP, Laravel, MySQL\n- Nghiên cứu các công nghệ lập trình mới, tiên tiến để áp dụng cải tiến hệ thống\n- Thực hiện các yêu cầu từ Ban giám đốc",
-    "Yêu cầu ứng viên": "- Tốt nghiệp chuyên ngành công nghệ thông tin bậc đại học hoặc có chứng chỉ tại các trung tâm đào tạo lập trình viên (Aptech/...)\n- Có ít nhất 2 năm kinh nghiệm làm việc với PHP và Framework Laravel\n- Thành thạo PHP, Framework Laravel, MySQL (Đã từng làm việc với Java Springboot là điểm cộng)\n- Thành thạo GIT, Docker\n- Khả năng đọc hiểu tài liệu tiếng anh tốt\n- Khả năng tự nghiên cứu và áp dụng các công nghệ mới.\n- Kỹ năng làm việc độc lập, làm việc nhóm tốt\n- Trung thực, nhiệt huyết, hoà đồng\n- Ưu tiên ứng viên đã từng làm việc với các công nghệ như JavaScript, HTML, CSS, Vue.js hoặc React.",
-    "Quyền lợi": "- Mức lương: Up to 25M\n- Review lương 1 năm một lần, không giới hạn theo năng lực\n- Thưởng năng suất, thưởng lợi nhuận\n- 2 ngày WFH/tháng; ít nhất 12 ngày nghỉ phép và 1 ngày nghỉ Birthday relax có lương\n- Được đào tạo và phát triển trên những nền tảng công nghệ tiên tiến nhất\n- Được làm việc với dự án có quy mô lớn, xử lý lượng dữ liệu và traffic lớn\n- Được bảo vệ sức khoẻ với các chính sách: Khám tầm soát ung thư định kỳ hàng năm tại các bệnh viện hàng đầu uy tín, Mua bảo hiểm Phi nhân thọ cho nhân viên\n- 2 ngày WFH/tháng; ít nhất 12 ngày nghỉ phép và 1 ngày nghỉ Birthday relax có lương\n- Được trải nghiệm dịch vụ 5 sao ít nhất 2 lần/năm\n- Được hưởng đầy đủ các quyền lợi lao động theo quy định của nhà nước sau khi ký hợp đồng lao động\n- Được tham gia các CLB sở thích: Bóng đá, Nhảy hiện đại,.. do công ty tài trợ chi phí 100%\n- Môi trường làm việc trẻ trung năng động",
-    "Địa điểm làm việc": "- Hà Nội: Tầng 6, toà nhà Hà Nội Ford, 311 Trường Chinh, phường Khương Mai, Thanh Xuân",
-    "Thời gian làm việc": "Linh hoạt từ Thứ 2 đến thứ 6 (Nghỉ thứ 7, chủ nhật)",
-    "Cách thức ứng tuyển": "Ứng viên nộp hồ sơ trực tuyến bằng cách bấm\nỨng tuyển\nngay dưới đây."
-  },
-  {
     "Tên công ty": "Expolanka Freight (Vietnam) Ltd",
     "Mức lương": "Thoả thuận",
     "Địa điểm": "Hồ Chí Minh",
@@ -32,6 +8,30 @@
     "Yêu cầu ứng viên": "Position Requirements:\n· At least 1 years of working experience in IT admin, network support...\n· Good knowledge about network infrastructure & network devices (Cisco, Pep link, Fortinet)\n· Strong knowledge about Office 365 products (Outlook, SharePoint, Power Automate)\n· Knowledge of ERP software will be an added advantage\n· Good English (both oral and written).",
     "Quyền lợi": "Benefits:\n•\tSocial insurance, health insurance, unemployment insurance according to Labor Laws\n•\tFriendly working environment\n•\tThe right salary and allowance, bonus offer to the right capacity and experience candidate\n•\t13th salary payment\n•\t12 annual leave days\n•\tSalary: upon capacity.",
     "Địa điểm làm việc": "- Hồ Chí Minh: Floor M.02, Tower B, Viettel Building, 285 Cach Mang Thang 8, Quận 10",
+    "Cách thức ứng tuyển": "Ứng viên nộp hồ sơ trực tuyến bằng cách bấm\nỨng tuyển\nngay dưới đây."
+  },
+  {
+    "Tên công ty": "CÔNG TY CỔ PHẦN STRINGEE",
+    "Mức lương": "1,000 - 2,500 USD",
+    "Địa điểm": "Hà Nội",
+    "Kinh nghiệm": "2 năm",
+    "Mô tả công việc": "Chịu trách nhiệm nghiên cứu & phát triển backend sử dụng ngôn ngữ/công nghệ: Java, MySQL, Redis, Memcached, Kafka, ElasticSearch, Docker, K8S,...\nThiết kế/lập trình các module, thiết kế giao tiếp cho hệ thống tải lớn hàng trăm triệu người dùng (sử dụng cả Java).\nNghiên cứu sử dụng, chỉnh sửa các open source về VoIP, streaming phổ biến.\nChi tiết sẽ trao đổi cụ thể khi phỏng vấn.\nGiới thiệu về Công ty:\nStringee là công ty công nghệ cung cấp\nnền tảng quản trị doanh nghiệp hợp nhất – Cogover\n, giúp số hóa toàn diện hoạt động quản trị và vận hành doanh nghiệp. Cogover ứng dụng công nghệ\nNo-code/Low-code và AI\n, cho phép doanh nghiệp tự xây dựng và tùy chỉnh hệ thống qua thao tác\nkéo - thả\nvà cấu hình đơn giản, mà không cần lập trình.\nHiện tại, Stringee cung cấp 3 bộ sản phẩm chính:\nQuản trị khách hàng: CRM, Service, CDP\nQuản trị nội bộ: HRM, Recruit, Marketing, Process, Site, Finance\nSố hóa giao tiếp: Communication APIs\nVới hơn 3,000 doanh nghiệp sử dụng, 70 triệu người dùng cuối, và nhiều khách hàng lớn như Viettel, Mobifone, VNDIRECT, Techcombank, TPBank,... Stringee là một trong những nền tảng số Make in Vietnam tiên phong trong chuyển đổi số.\nStringee từng đạt giải Nhân tài Đất Việt 2018, Top 10 Sao Khuê 2023, và được Bộ TT&TT công nhận là Nền tảng số xuất sắc Make in Vietnam.",
+    "Yêu cầu ứng viên": "Thành thạo Java\n.\nNắm rất vững lập trình hướng đối tượng, Design Pattern.\nCó kinh nghiệm về unit test và integration test.\nHiểu về lập trình đa luồng, non-blocking IO, xử lý bất đồng bộ,...\nĐã từng làm việc với Socket, TCP/IP, các thư viện như SpringBoot, Netty, Apache MINA là lợi thế.\nĐã từng làm việc với RabbitMQ, ActiveMQ, Kafka, Docker, K8S,... là lợi thế.\nCó khả năng làm việc với Linux.",
+    "Quyền lợi": "Lương từ\n$1000 - $2500\n(phụ thuộc vào năng lực và kinh nghiệm của bạn, chúng tôi không bao giờ đãi ngộ thấp hơn khả năng của bạn).\nThưởng theo hiệu quả công việc (hoàn thành milestone, deadline, ...), thưởng năm, các dịp lễ tết.\nMôi trường trẻ, năng động, sáng tạo, hỗ trợ tối đa sự phát triển và công việc của nhân viên.\nĐào tạo để thường xuyên nâng cao nghiệp vụ. Cơ hội được học hỏi, làm việc với công nghệ mới.\nLàm việc trong một môi trường chuyên nghiệp với các đối tác nước ngoài.\nĐóng bảo hiểm và các chế độ khác theo Luật lao động; khám sức khoẻ định kỳ hàng năm.\nTham gia các câu lạc bộ thể thao: bóng đá, chạy bộ,…\nTham dự các buổi đi chơi, dã ngoại, nghỉ mát,…",
+    "Địa điểm làm việc": "- Hà Nội: Tầng 17 Tòa nhà VP 2, Dự án Sunsquare, số 21 Lê Đức Thọ, Nam Từ Liêm",
+    "Thời gian làm việc": "Thứ 2 - Thứ 6 (từ 08:30 đến 17:45)",
+    "Cách thức ứng tuyển": "Ứng viên nộp hồ sơ trực tuyến bằng cách bấm\nỨng tuyển\nngay dưới đây."
+  },
+  {
+    "Tên công ty": "CÔNG TY TNHH ĐIỆN TỬ CÔNG NGHỆ TƯỜNG AN – TAKO",
+    "Mức lương": "9 - 11 triệu",
+    "Địa điểm": "Hà Nội",
+    "Kinh nghiệm": "1 năm",
+    "Mô tả công việc": "Công ty là NPP lâu năm (25 năm) của hãng các nhãn hàng lớn trên thị trường như TP-Link, AULA, Firstplayer cần tuyển NV làm việc tại phòng kỹ thuật bảo hành của công ty bao gồm các CV sau:\nPhụ trách test lỗi các sản phẩm thiết bị mạng và thiết bị ngoại vi như bàn phím, chuột, nguồn, case,....\nKiểm tra, cài đặt các thiết bị mạng như router, switch mạng, wifi,...\nHướng dẫn, hỗ trợ kỹ thuật về hướng dẫn sử dụng, kiểm tra lỗi của thiết bị mạng và thiết bị ngoại vi cho đại lý và khách hàng qua mail, điện thoại, zalo,...\nLàm việc bộ phận kỹ thuật, bảo hành của nhà cung cấp của công ty.\nHỗ trợ 1 phần kỹ thuật điện tử sửa các sản phẩm điện tử (nếu chưa có kinh nghiệm sẽ được đào tạo)\nThời gian làm việc: từ 7h45-12h, 13h30-17h30 thứ 2 đến thứ 7, CN và ngày lễ nghỉ",
+    "Yêu cầu ứng viên": "Nam, tốt nghiệp cao đẳng, đại học chuyên ngành điện tử, IT\nĐô tuổi từ 22-35\nCó ít nhất 1 năm kinh nghiệm ở vị trí kỹ thuật IT, ưu tiên đã có kinh nghiệp lên cấu hình, cài đặt, triển khai hệ thống mạng, camera.\nChăm chỉ, trung thực",
+    "Quyền lợi": "Thu nhập: TỔNG 9tr-11tr tuy theo kinh nghiệm và năng lực, chưa tính thưởng năm\nThưởng tháng lương thứ 13\nĐược đào tạo nghiệp vụ kỹ kỹ càng do các hãng thiết bị công nghệ hướng dẫn\nCó BHXH, BHYT\nThử việc chỉ 1 tháng hưởng 85% lương cơ bản + phụ cấp\nLương nhận qua thẻ vào ngày 15 hàng tháng\nMôi trường: minh bạch, công bằng, năng động, mọi người giúp đỡ nhau trong công việc",
+    "Địa điểm làm việc": "- Hà Nội: số 3 lô 1C khu đô thị Trung Yên, Phường Trung Hòa, Cầu Giấy",
+    "Thời gian làm việc": "Thứ 2 - Thứ 7 (từ 07:45 đến 17:30)\n7h45-12h và 13h30-17h30, từ thứ 2 đến thứ 7, giờ hành chính, CN và ngày lễ nghỉ",
     "Cách thức ứng tuyển": "Ứng viên nộp hồ sơ trực tuyến bằng cách bấm\nỨng tuyển\nngay dưới đây."
   }
 ]
