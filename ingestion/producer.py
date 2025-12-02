@@ -15,7 +15,7 @@ queue_name = "job_files"
 channel.queue_declare(queue=queue_name, durable=True)
 
 # 🧾 Đọc tất cả file JSON
-files = sorted(glob.glob("./job_data_*.json"))
+files = sorted(glob.glob("./data/job_data_*.json"))
 
 for file_path in files:
     filename = os.path.basename(file_path)
