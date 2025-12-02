@@ -1,0 +1,5 @@
+#Máy thật
+kafka-python==2.3.0
+
+#Máy ảo
+pyspark==3.5.0
