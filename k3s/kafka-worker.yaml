@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bigdata
+---
+# 1. Service mở cổng giao tiếp
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-service
+  namespace: bigdata
+spec:
+  selector:
+    app: kafka
+  type: NodePort
+  ports:
+    - name: internal
+      port: 9092
+      targetPort: 9092
+    - name: external
+      port: 30092 # Cổng giao tiếp với Python bên ngoài
+      targetPort: 30092
+      nodePort: 30092
+    - name: controller
+      port: 9093
+      targetPort: 9093
+
+---
+# 2. Deployment Kafka
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  namespace: bigdata
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      # GHIM VÀO WORKER 1
+      nodeSelector:
+        kubernetes.io/hostname: mintdata1-virtualbox
+
+      containers:
+        - name: kafka
+          image: apache/kafka:3.7.0
+          ports:
+            - containerPort: 9092
+            - containerPort: 9093
+            - containerPort: 30092
+          env:
+            # Cấu hình Mode KRaft
+            - name: KAFKA_NODE_ID
+              value: "1"
+            - name: KAFKA_PROCESS_ROLES
+              value: "broker,controller"
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: "1@localhost:9093"
+
+            # Cấu hình Listeners
+            - name: KAFKA_LISTENERS
+              value: "PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:30092"
+
+            # Cấu hình Advertised Listeners
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: "PLAINTEXT://kafka-service.bigdata.svc.cluster.local:9092,EXTERNAL://192.168.56.104:30092"
+
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT"
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: "CONTROLLER"
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: "PLAINTEXT"
+
+            # ID Cluster ngẫu nhiên bắt buộc cho chế độ KRaft
+            - name: CLUSTER_ID
+              value: "MkU3OEVBNTcwNTJENDM2Qk"
+
+          volumeMounts:
+            - name: kafka-data
+              mountPath: /var/lib/kafka/data
+      volumes:
+        - name: kafka-data
+          persistentVolumeClaim:
+            claimName: kafka-pvc
+
+---
+# 3. Ổ cứng lưu dữ liệu
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-pvc
+  namespace: bigdata
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
