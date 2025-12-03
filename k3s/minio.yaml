@@ -1,0 +1,83 @@
+# 1. Tạo Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bigdata
+
+---
+# 2. Tạo nơi lưu trữ (Persistent Volume Claim)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-pvc
+  namespace: bigdata
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# 3. Tạo Service để mở cổng ra ngoài (NodePort)
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-service
+  namespace: bigdata
+spec:
+  type: NodePort # Cho phép truy cập từ IP của bất kỳ máy ảo nào
+  selector:
+    app: minio
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+      nodePort: 30000 # Cổng cố định để code Python/Spark gọi vào
+    - name: console
+      port: 9001
+      targetPort: 9001
+      nodePort: 30001 # Cổng cố định để vào web quản trị
+
+---
+# 4. Cấu hình MinIO
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: bigdata
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  strategy:
+    type: Recreate # Quan trọng: Để đảm bảo không có 2 pod chạy cùng lúc tranh nhau dữ liệu
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: mintdata-virtualbox
+
+      containers:
+        - name: minio
+          image: minio/minio:latest
+          args: ["server", "/data", "--console-address", ":9001"]
+          env:
+            - name: MINIO_ROOT_USER
+              value: "admin"
+            - name: MINIO_ROOT_PASSWORD
+              value: "password123"
+          ports:
+            - containerPort: 9000
+            - containerPort: 9001
+          volumeMounts:
+            - name: storage
+              mountPath: "/data"
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: minio-pvc
