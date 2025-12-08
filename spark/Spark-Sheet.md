@@ -34,6 +34,8 @@ kubectl exec -it -n bigdata $SPARK_POD -- /bin/bash
 /opt/spark/bin/spark-submit \
 --conf spark.jars.ivy=/tmp/.ivy \
 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,org.apache.hadoop:hadoop-aws:3.3.4 \
+--driver-memory 800m \
+--executor-memory 1g \
 /opt/spark/work-dir/spark_job.py
 ```
 

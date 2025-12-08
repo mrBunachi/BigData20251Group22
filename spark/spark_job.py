@@ -14,7 +14,7 @@ job_schema = StructType() \
     .add("Địa điểm làm việc", StringType()) \
     .add("Cách thức ứng tuyển", StringType()) \
     .add("data_type", StringType()) \
-    .add("ingest_time", StringType()) # Trường này do Producer thêm vào
+    .add("ingest_time", StringType()) # Trường này do Producer thêm vào (nếu có)
 
 # 2. Khởi tạo Spark
 spark = SparkSession.builder \
@@ -29,7 +29,7 @@ spark = SparkSession.builder \
 
 spark.sparkContext.setLogLevel("WARN")
 
-# 3. Đọc từ Kafka
+# 3. Đọc từ Kafka (Gộp cả 2 topic Batch và Live)
 TOPICS = "itjobs_history,itjobs_live"
 
 df_kafka = spark.readStream \
@@ -37,6 +37,7 @@ df_kafka = spark.readStream \
     .option("kafka.bootstrap.servers", "kafka-service:9092") \
     .option("subscribe", TOPICS) \
     .option("startingOffsets", "earliest") \
+    .option("maxOffsetsPerTrigger", 200) \
     .load()
 
 # 4. Parse JSON
@@ -53,13 +54,20 @@ df_parsed = df_kafka.select(
     col("kafka_timestamp")
 )
 
-# 5. Ghi kết quả
-# In kết quả ra màn hình log của Spark Driver
+# 5. Ghi xuống MinIO (Data Lake Unified)
 query = df_parsed.writeStream \
-    .format("console") \
-    .outputMode("append") \
-    .option("truncate", "false") \
-    .start()
+   .format("json") \
+   .option("path", "s3a://test/data/") \
+   .option("checkpointLocation", "s3a://test/checkpoints/") \
+   .outputMode("append") \
+   .start()
 
-print(f"Spark đang lắng nghe topics [{TOPICS}] và ghi ra Console...")
+# In kết quả ra màn hình log của Spark Driver
+# query = df_parsed.writeStream \
+#     .format("console") \
+#     .outputMode("append") \
+#     .option("truncate", "false") \
+#     .start()
+
+print(f"Spark đang lắng nghe topics [{TOPICS}] và ghi vào DataLake...")
 query.awaitTermination()

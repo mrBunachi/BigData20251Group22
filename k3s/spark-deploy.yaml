@@ -53,9 +53,18 @@ spec:
           ports:
             - containerPort: 7077
             - containerPort: 8080
+          # --- Cấu hình Ram ---
+          resources:
+            requests:
+              memory: "512Mi" # Xin tối thiểu
+              cpu: "200m" # Xin 0.2 Core
+            limits:
+              memory: "1200Mi" # Tối đa 1.2 GB (Đủ cho Driver + Overhead)
+              cpu: "500m" # Tối đa 0.5 Core
+          # ------------------------------
           env:
             - name: SPARK_DAEMON_MEMORY
-              value: "1g"
+              value: "800m" # Giảm Heap Java xuống 800MB để vừa vặn Container 1.2GB
 
 ---
 # 3. Spark Worker
@@ -86,8 +95,17 @@ spec:
               "org.apache.spark.deploy.worker.Worker",
               "spark://spark-master-svc:7077",
             ]
+          # --- Cấu hình Ram ---
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1500Mi" # Tối đa 1.5 GB
+              cpu: "1000m" # Tối đa 1 Core
+          # ------------------------------
           env:
             - name: SPARK_WORKER_MEMORY
-              value: "1G"
+              value: "1024m" # Heap Java là 1GB (Để dành 500MB cho Overhead)
             - name: SPARK_WORKER_CORES
               value: "1"
