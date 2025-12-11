@@ -9,14 +9,14 @@
 ![Sơ đồ luồng dữ liệu](images/workflow.png)
 
 ### 3. Đáp ứng tiêu chí
-* Data Ingestion → crawler/API + Kafka.
-* Data Processing → Spark batch + streaming.
-* Stream Processing → flash sale, real-time order.
-Data Storage → NoSQL + HDFS.
-* System Integration → API dashboard.
-* Performance Optimization → partition theo category/product_id.
-* Monitoring → log số đơn, latency Kafka.
-* Scaling → thêm nhiều nguồn (TopCV, Vietnamworks, ITviec).
-* Data Quality & Testing → kiểm tra giá, bỏ spam reviews.
-* Security & Governance → phân quyền (admin, seller).
-* Fault Tolerance → backup data orders.
+* Data Ingestion → Producer App (Crawler) + Kafka/Redpanda.
+* Data Processing → Spark Batch (Ingestion & ETL Python Code).
+* Stream Processing → Realtime Metrics (Web Dashboard via MongoDB).
+* Data Storage → MinIO DataLake (JSON/Parquet) + MongoDB.
+* System Integration → Trino SQL + BI Tool (Superset) + Web Dashboard.
+* Performance Optimization → Chuẩn hóa Parquet, Partition theo ngày/nguồn.
+* Monitoring → Log số lượng tin tuyển dụng, Kafka latency.
+* Scaling → Thêm nhiều nguồn (TopCV, Vietnamworks, ITviec).
+* Data Quality & Testing → Chuẩn hóa lương, làm sạch HTML, lọc trùng lặp.
+* Security & Governance → Phân quyền truy cập (Data Engineer, Analyst).
+* Fault Tolerance → Backup Raw Data (MinIO), Kafka offset replay.
