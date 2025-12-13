@@ -19,7 +19,7 @@ SOURCE_FOLDER = "batch/"        # Chỉ xử lý dữ liệu trong folder 'batch
 # ================= HÀM LÀM SẠCH (GIỮ NGUYÊN) =================
 def clean_salary(salary_str):
     if pd.isna(salary_str) or salary_str == "Thoả thuận":
-        return 0, 0, "VND"
+        return 0, 0, "VND" #Trả về mức lương tối thiểu, tối đa và loại tiền tệ chứ?
     s = str(salary_str).lower().replace(",", "").replace(".", "")
     currency = "USD" if "usd" in s or "$" in s else "VND"
     numbers = [int(n) for n in re.findall(r'\d+', s)]
