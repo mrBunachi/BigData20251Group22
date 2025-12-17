@@ -9,6 +9,9 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from pymongo import MongoClient, UpdateOne
 from pymongo.errors import BulkWriteError
+# Tự động tạo job_id cho mỗi lần chạy
+import uuid
+job_id = str(uuid.uuid4())
 
 # ================= LOAD ENV =================
 load_dotenv()
@@ -110,7 +113,8 @@ def normalize_record(rec: dict) -> dict:
     """
     Chuẩn hoá 1 record sang schema EN + clean fields
     """
-    job_id = rec.get("id", None)
+    # Nếu có trường id thì dùng làm job_id
+    # job_id = rec.get("id", None)
 
     min_sal, max_sal, currency = clean_salary(rec.get("Mức lương"))
     yoe = clean_experience(rec.get("Kinh nghiệm"))
