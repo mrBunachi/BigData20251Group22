@@ -3,7 +3,7 @@ kind: Namespace
 metadata:
   name: bigdata
 ---
-# 1. Service
+# 1. SERVICE
 apiVersion: v1
 kind: Service
 metadata:
@@ -23,7 +23,7 @@ spec:
       nodePort: 30080
 
 ---
-# 2. Spark Master
+# 2. SPARK MASTER
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -41,7 +41,6 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: mintdata2-virtualbox
-
       containers:
         - name: spark-master
           image: apache/spark:3.5.0
@@ -53,21 +52,19 @@ spec:
           ports:
             - containerPort: 7077
             - containerPort: 8080
-          # --- Cấu hình Ram ---
           resources:
             requests:
-              memory: "512Mi" # Xin tối thiểu
-              cpu: "200m" # Xin 0.2 Core
+              memory: "512Mi"
+              cpu: "200m"
             limits:
-              memory: "1200Mi" # Tối đa 1.2 GB (Đủ cho Driver + Overhead)
-              cpu: "500m" # Tối đa 0.5 Core
-          # ------------------------------
+              memory: "1000Mi"
+              cpu: "500m" # Giảm xuống 0.5 Core vì Master không cần nhiều CPU
           env:
             - name: SPARK_DAEMON_MEMORY
-              value: "800m" # Giảm Heap Java xuống 800MB để vừa vặn Container 1.2GB
+              value: "800m"
 
 ---
-# 3. Spark Worker
+# 3. SPARK WORKER (OPTIMIZED)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -86,6 +83,14 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: mintdata2-virtualbox
 
+      # Cấu hình ổ đĩa để tránh crash container khi tràn bộ nhớ đệm
+      volumes:
+        - name: spark-worker-data
+          hostPath:
+            # Tạo thư mục này trên máy ảo: mkdir -p /data/spark-worker
+            path: /tmp/spark-worker-data
+            type: DirectoryOrCreate
+
       containers:
         - name: spark-worker
           image: apache/spark:3.5.0
@@ -95,17 +100,24 @@ spec:
               "org.apache.spark.deploy.worker.Worker",
               "spark://spark-master-svc:7077",
             ]
-          # --- Cấu hình Ram ---
+
+          # Mount volume vào container
+          volumeMounts:
+            - name: spark-worker-data
+              mountPath: /opt/spark/work # Nơi lưu log và data tạm của Executor
+
+          # Tối ưu Resource cho máy 8GB RAM (6GB Available)
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: "2Gi"
+              cpu: "1000m"
             limits:
-              memory: "1500Mi" # Tối đa 1.5 GB
-              cpu: "1000m" # Tối đa 1 Core
-          # ------------------------------
+              memory: "4000Mi"
+              cpu: "2500m"
+
           env:
+            # Tăng bộ nhớ Heap cho Executor lên 3GB
             - name: SPARK_WORKER_MEMORY
-              value: "1024m" # Heap Java là 1GB (Để dành 500MB cho Overhead)
+              value: "3000m"
             - name: SPARK_WORKER_CORES
-              value: "1"
+              value: "2"

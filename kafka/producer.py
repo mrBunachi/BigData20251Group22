@@ -4,7 +4,7 @@ import sys
 from kafka import KafkaProducer
 
 KAFKA_BROKER = '192.168.56.104:30092' 
-DATA_FILE = 'data\job_data_1.json'
+DATA_FILE = '..\data\job_data_1.json'
 
 # Khởi tạo Producer
 producer = KafkaProducer(
@@ -31,7 +31,6 @@ def run_batch_mode(jobs):
     print(f"[BATCH MODE] Đang nạp {len(jobs)} jobs vào topic '{TOPIC}'...")
     
     for i, job in enumerate(jobs):
-        job['data_type'] = 'history'
         job['ingest_time'] = str(time.time())
         
         producer.send(TOPIC, value=job)
@@ -49,7 +48,6 @@ def run_streaming_mode(jobs):
     
     while True:
         for job in jobs:
-            job['data_type'] = 'live'
             job['ingest_time'] = str(time.time())
             
             producer.send(TOPIC, value=job)

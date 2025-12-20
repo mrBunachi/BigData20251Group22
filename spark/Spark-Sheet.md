@@ -12,10 +12,10 @@
 
 ```bash
 # 1. Lấy tên Pod hiện tại
-export SPARK_POD=$(kubectl get pods -n bigdata -l app=spark-master -o jsonpath='{.items[0].metadata.name}')
+export MASTER_POD=$(kubectl get pods -n bigdata -l app=spark-master -o jsonpath='{.items[0].metadata.name}')
 
 # 2. Copy ghi đè file vào trong Pod
-kubectl cp spark_job.py bigdata/$SPARK_POD:/opt/spark/work-dir/spark_job.py
+kubectl cp spark_job.py bigdata/$MASTER_POD:/opt/spark/spark_job.py
 ```
 
 `(Nếu lệnh chạy im lặng không báo lỗi gì là thành công).`
@@ -28,15 +28,19 @@ kubectl cp spark_job.py bigdata/$SPARK_POD:/opt/spark/work-dir/spark_job.py
 
 ```bash
 # 1. Chui vào Pod
-kubectl exec -it -n bigdata $SPARK_POD -- /bin/bash
+kubectl exec -it $MASTER_POD -n bigdata -- bash
 
 # 2. Dán lệnh này để CHẠY (Bên trong Pod)
 /opt/spark/bin/spark-submit \
---conf spark.jars.ivy=/tmp/.ivy \
---packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,org.apache.hadoop:hadoop-aws:3.3.4 \
---driver-memory 800m \
---executor-memory 1g \
-/opt/spark/work-dir/spark_job.py
+  --master spark://spark-master-svc:7077 \
+  --deploy-mode client \
+  --name "IT Jobs Splitting" \
+  --conf spark.driver.host=$(hostname -i) \
+  --conf spark.driver.bindAddress=0.0.0.0 \
+  --driver-memory 512M \
+  --executor-memory 2G \
+  --executor-cores 2 \
+  /opt/spark/spark_job.py
 ```
 
 ## **Update Code**
