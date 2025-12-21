@@ -11,10 +11,14 @@
 ### Chạy 2 lệnh này tại terminal máy Master để cập nhật code mới vào bên trong Pod:
 
 ```bash
-# 1. Lấy tên Pod hiện tại
+# Lấy tên Master Pod và Worker Pod
 export MASTER_POD=$(kubectl get pods -n bigdata -l app=spark-master -o jsonpath='{.items[0].metadata.name}')
+export WORKER_POD=$(kubectl get pods -n bigdata -l app=spark-worker -o jsonpath='{.items[0].metadata.name}')
 
-# 2. Copy ghi đè file vào trong Pod
+kubectl exec -it $MASTER_POD -n bigdata -- ls -l /opt/spark/jars/ | grep -E "aws-java-sdk-bundle|commons-pool2|hadoop-aws|kafka-clients|spark-sql-kafka|spark-token-provider"
+kubectl exec -it $WORKER_POD -n bigdata -- ls -l /opt/spark/jars/ | grep -E "aws-java-sdk-bundle|commons-pool2|hadoop-aws|kafka-clients|spark-sql-kafka|spark-token-provider"
+
+# 1. Copy ghi đè file vào trong Pod
 kubectl cp spark_job.py bigdata/$MASTER_POD:/opt/spark/spark_job.py
 ```
 
@@ -27,14 +31,27 @@ kubectl cp spark_job.py bigdata/$MASTER_POD:/opt/spark/spark_job.py
 ### Chui vào Pod và chạy Submit:
 
 ```bash
-# 1. Chui vào Pod
+# QUAN TRỌNG: Cấp quyền ghi cho spark worker (tại máy cài spark)
+sudo chmod -R 777 /tmp/spark-worker-data
+
+# 1. Vào Pod Master
+export MASTER_POD=$(kubectl get pods -n bigdata -l app=spark-master -o jsonpath='{.items[0].metadata.name}')
 kubectl exec -it $MASTER_POD -n bigdata -- bash
 
-# 2. Dán lệnh này để CHẠY (Bên trong Pod)
+# 2. Khai báo biến chứa danh sách Jars
+JARS="/opt/spark/jars/kafka-clients-3.4.1.jar,\
+/opt/spark/jars/spark-sql-kafka-0-10_2.12-3.5.0.jar,\
+/opt/spark/jars/spark-token-provider-kafka-0-10_2.12-3.5.0.jar,\
+/opt/spark/jars/commons-pool2-2.11.1.jar,\
+/opt/spark/jars/hadoop-aws-3.3.4.jar,\
+/opt/spark/jars/aws-java-sdk-bundle-1.12.262.jar"
+
+# 3. Chạy lệnh Submit với tham số --jars
 /opt/spark/bin/spark-submit \
   --master spark://spark-master-svc:7077 \
   --deploy-mode client \
   --name "IT Jobs Splitting" \
+  --jars $JARS \
   --conf spark.driver.host=$(hostname -i) \
   --conf spark.driver.bindAddress=0.0.0.0 \
   --driver-memory 512M \

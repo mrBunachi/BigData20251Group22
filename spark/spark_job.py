@@ -66,17 +66,22 @@ df_live = df_parsed.filter(col("topic") == "itjobs_live").drop("topic")
 
 print(f"Spark đang lắng nghe topics [{TOPICS}] và phân loại vào batch/streaming...")
 
-# 6. Ghi xuống MinIO (Chạy 2 query song song)
+# 6. Ghi xuống MinIO
 
-# Query 1: Ghi History vào folder batch
+# --- LUỒNG 1: BATCH (HISTORY) ---
+# Thêm trigger(availableNow=True) để chạy hết data thì DỪNG
 query_history = df_history.writeStream \
     .format("json") \
     .option("path", "s3a://bucket1/batch/") \
     .option("checkpointLocation", "s3a://bucket1/checkpoints/history_batch/") \
     .outputMode("append") \
+    .trigger(availableNow=True) \
     .start()
 
-# Query 2: Ghi Live vào folder streaming
+print("--> Đã khởi động luồng History (Chế độ Batch: Chạy xong sẽ tự dừng)")
+
+# --- LUỒNG 2: STREAMING (LIVE) ---
+# Luồng này chạy liên tục (Mặc định)
 query_live = df_live.writeStream \
     .format("json") \
     .option("path", "s3a://bucket1/streaming/") \
@@ -84,12 +89,19 @@ query_live = df_live.writeStream \
     .outputMode("append") \
     .start()
 
+print("--> Đã khởi động luồng Live (Chế độ Streaming: Chạy vĩnh viễn)")
+
+# 7. QUAN TRỌNG: Chờ luồng Live, không dùng awaitAnyTermination()
+# Lý do: Nếu dùng awaitAnyTermination(), khi query_history chạy xong, 
+# cả chương trình sẽ đóng lại => query_live cũng chết theo.
+try:
+    query_live.awaitTermination()
+except Exception as e:
+    print(f"Luồng Live bị lỗi: {e}")
+
 # In kết quả ra màn hình log của Spark Driver
 # query = df_parsed.writeStream \
 #     .format("console") \
 #     .outputMode("append") \
 #     .option("truncate", "false") \
 #     .start()
-
-# Chờ cả 2 luồng
-spark.streams.awaitAnyTermination()

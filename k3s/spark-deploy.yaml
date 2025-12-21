@@ -57,8 +57,8 @@ spec:
               memory: "512Mi"
               cpu: "200m"
             limits:
-              memory: "1000Mi"
-              cpu: "500m" # Giảm xuống 0.5 Core vì Master không cần nhiều CPU
+              memory: "2500Mi"
+              cpu: "1000m" # Giảm xuống 1 Core vì Master không cần nhiều CPU
           env:
             - name: SPARK_DAEMON_MEMORY
               value: "800m"

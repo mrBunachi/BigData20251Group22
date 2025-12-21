@@ -52,7 +52,7 @@ def run_streaming_mode(jobs):
             
             producer.send(TOPIC, value=job)
             
-            title = job.get('title') or job.get('Tiêu đề') or job.get('Tên công việc') or 'Unknown Job'
+            title = job.get('Tên công việc') or 'Unknown Job'
             print(f" -> Live Job: {title}")
             
             time.sleep(2) 
