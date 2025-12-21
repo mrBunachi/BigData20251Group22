@@ -7,7 +7,7 @@ import re
 # 1. LOGIC LÀM SẠCH (UDF)
 def clean_salary_logic(salary_str):
     if salary_str is None or str(salary_str).strip() == "" or salary_str == "Thoả thuận":
-        return 0, 0, "VND"
+        return None, None, "VND"
     
     s = str(salary_str).lower().replace(",", "").replace(".", "")
     currency = "USD" if ("usd" in s or "$" in s) else "VND"
@@ -25,7 +25,10 @@ def clean_salary_logic(salary_str):
         if 0 < min_sal < 1000: min_sal *= 1000000
         if 0 < max_sal < 1000: max_sal *= 1000000
             
-    return int(min_sal), int(max_sal), currency
+    final_min = int(min_sal) if min_sal > 0 else None
+    final_max = int(max_sal) if max_sal > 0 else None
+    
+    return final_min, final_max, currency
 
 def clean_experience_logic(exp_str):
     if exp_str is None or "không yêu cầu" in str(exp_str).lower():
@@ -35,15 +38,14 @@ def clean_experience_logic(exp_str):
 
 # Đăng ký UDF
 salary_schema = StructType([
-    StructField("min_salary", LongType(), False),
-    StructField("max_salary", LongType(), False),
-    StructField("currency", StringType(), False)
+    StructField("min_salary", LongType(), True),
+    StructField("max_salary", LongType(), True),
+    StructField("currency", StringType(), True)
 ])
 
 clean_salary_udf = udf(clean_salary_logic, salary_schema)
 clean_exp_udf = udf(clean_experience_logic, IntegerType())
 
-# 2. KHỞI TẠO SPARK 
 def create_spark_session():
     builder = SparkSession.builder \
         .appName("IT Jobs Batch ETL") \
@@ -56,13 +58,11 @@ def create_spark_session():
         .config("spark.sql.parquet.compression.codec", "snappy")
     return builder.getOrCreate()
 
-# 3. MAIN
 def main():
     spark = create_spark_session()
     print(">>> [BATCH JOB] Đang đọc dữ liệu từ MinIO Bucket 1...")
 
     try:
-        # Đọc dữ liệu từ Bucket 1 (Lúc này dữ liệu ĐÃ LÀ TIẾNG ANH do spark_job.py tạo ra)
         raw_df = spark.read.json("s3a://bucket1/batch/*.json")
     except Exception as e:
         print(f"!!! Lỗi đọc file: {e}")
@@ -71,11 +71,11 @@ def main():
 
     print(">>> [BATCH JOB] Đang xử lý và làm sạch dữ liệu...")
     
-    # 1. Áp dụng UDF làm sạch (Dùng cột tiếng Anh: salary, experience)
+    # 1. Áp dụng UDF làm sạch (Input là salary/experience từ bucket 1)
     df_cleaned = raw_df.withColumn("salary_info", clean_salary_udf(col("salary"))) \
                        .withColumn("clean_exp", clean_exp_udf(col("experience")))
 
-    # 2. Chọn cột output cuối cùng (Chuẩn hóa Schema)
+    # 2. Chọn cột output cuối cùng (Chuẩn hóa sang Final EN)
     final_df = df_cleaned.select(
         col("job_title"),
         col("company_name").alias("company"),
@@ -85,11 +85,13 @@ def main():
         col("salary_info.currency").alias("currency"),
         col("clean_exp").alias("years_of_experience"),
         col("job_description"),
-        col("requirements"),
-        col("benefits"),
-        col("workplace"),      # Cột này đã được spark_job.py tạo ra
-        col("working_time"),
-        col("apply_method"),
+        # Xử lý an toàn cột thiếu
+        (col("requirements") if "requirements" in raw_df.columns else lit(None)).alias("requirements"),
+        (col("benefits") if "benefits" in raw_df.columns else lit(None)).alias("benefits"),
+        (col("workplace") if "workplace" in raw_df.columns else lit(None)).alias("workplace"),
+        (col("working_time") if "working_time" in raw_df.columns else lit(None)).alias("working_time"),
+        (col("apply_method") if "apply_method" in raw_df.columns else lit(None)).alias("apply_method"),
+        
         col("salary").alias("raw_salary"),
         col("experience").alias("raw_experience"),
         col("kafka_timestamp").alias("ingested_at")
