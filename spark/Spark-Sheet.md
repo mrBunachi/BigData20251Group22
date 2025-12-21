@@ -13,13 +13,20 @@
 ```bash
 # Lấy tên Master Pod và Worker Pod
 export MASTER_POD=$(kubectl get pods -n bigdata -l app=spark-master -o jsonpath='{.items[0].metadata.name}')
-export WORKER_POD=$(kubectl get pods -n bigdata -l app=spark-worker -o jsonpath='{.items[0].metadata.name}')
-
 kubectl exec -it $MASTER_POD -n bigdata -- ls -l /opt/spark/jars/ | grep -E "aws-java-sdk-bundle|commons-pool2|hadoop-aws|kafka-clients|spark-sql-kafka|spark-token-provider"
+
+export WORKER_POD=$(kubectl get pods -n bigdata -l app=spark-worker -o jsonpath='{.items[0].metadata.name}')
 kubectl exec -it $WORKER_POD -n bigdata -- ls -l /opt/spark/jars/ | grep -E "aws-java-sdk-bundle|commons-pool2|hadoop-aws|kafka-clients|spark-sql-kafka|spark-token-provider"
 
 # 1. Copy ghi đè file vào trong Pod
+# a. Job 1 (Đọc ghi MinIO)
 kubectl cp spark_job.py bigdata/$MASTER_POD:/opt/spark/spark_job.py
+
+# b. Job 2 (Xử lý batch)
+kubectl cp spark_job_batch.py bigdata/$MASTER_POD:/opt/spark/spark_job_batch.py
+
+# c. Job 3 (Xử lý Stream)
+kubectl cp spark_job_stream.py bigdata/$MASTER_POD:/opt/spark/spark_job_stream.py
 ```
 
 `(Nếu lệnh chạy im lặng không báo lỗi gì là thành công).`
@@ -58,6 +65,19 @@ JARS="/opt/spark/jars/kafka-clients-3.4.1.jar,\
   --executor-memory 2G \
   --executor-cores 2 \
   /opt/spark/spark_job.py
+
+# 4. Submit Job Batch (Chỉ dùng 1 Core)
+/opt/spark/bin/spark-submit \
+  --master spark://spark-master-svc:7077 \
+  --deploy-mode client \
+  --name "IT Jobs Batch ETL" \
+  --jars $JARS \
+  --conf spark.driver.host=$(hostname -i) \
+  --conf spark.driver.bindAddress=0.0.0.0 \
+  --driver-memory 512M \
+  --executor-memory 2G \
+  --executor-cores 1 \
+  /opt/spark/spark_job_batch.py
 ```
 
 ## **Update Code**

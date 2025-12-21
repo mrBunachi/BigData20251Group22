@@ -58,13 +58,13 @@ spec:
               cpu: "200m"
             limits:
               memory: "2500Mi"
-              cpu: "1000m" # Giảm xuống 1 Core vì Master không cần nhiều CPU
+              cpu: "1000m"
           env:
             - name: SPARK_DAEMON_MEMORY
               value: "800m"
 
 ---
-# 3. SPARK WORKER (OPTIMIZED)
+# 3. SPARK WORKER (SAFE MODE: 3 CORES - 5GB RAM)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -83,11 +83,9 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: mintdata2-virtualbox
 
-      # Cấu hình ổ đĩa để tránh crash container khi tràn bộ nhớ đệm
       volumes:
         - name: spark-worker-data
           hostPath:
-            # Tạo thư mục này trên máy ảo: mkdir -p /data/spark-worker
             path: /tmp/spark-worker-data
             type: DirectoryOrCreate
 
@@ -100,24 +98,25 @@ spec:
               "org.apache.spark.deploy.worker.Worker",
               "spark://spark-master-svc:7077",
             ]
-
-          # Mount volume vào container
           volumeMounts:
             - name: spark-worker-data
-              mountPath: /opt/spark/work # Nơi lưu log và data tạm của Executor
+              mountPath: /opt/spark/work
 
-          # Tối ưu Resource cho máy 8GB RAM (6GB Available)
+          # --- CẤU HÌNH AN TOÀN ---
           resources:
             requests:
               memory: "2Gi"
-              cpu: "1000m"
+              cpu: "2000m"
             limits:
-              memory: "4000Mi"
-              cpu: "2500m"
+              # Giới hạn container ở mức 5.5GB (để lại 2.5GB cho OS)
+              memory: "5500Mi"
+              # Giới hạn CPU ở 3.5 Core (để lại 0.5 Core cho OS thở)
+              cpu: "3500m"
 
           env:
-            # Tăng bộ nhớ Heap cho Executor lên 3GB
+            # Spark chỉ được dùng 4.5GB để cấp cho Executor
             - name: SPARK_WORKER_MEMORY
-              value: "3000m"
+              value: "4500m"
+            # Spark chỉ được dùng 3 Core (Đủ cho 1 Streaming + 1 Batch)
             - name: SPARK_WORKER_CORES
-              value: "2"
+              value: "3"

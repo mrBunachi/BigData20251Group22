@@ -5,7 +5,7 @@ from io import BytesIO
 import re
 import os
 
-# ================= CẤU HÌNH KẾT NỐI MINIO =================
+# CẤU HÌNH KẾT NỐI MINIO
 # Cổng NodePort bạn đã tìm được
 MINIO_ENDPOINT = "192.168.56.103:30000" 
 MINIO_ACCESS_KEY = "admin"
@@ -16,7 +16,7 @@ SOURCE_BUCKET = "bucket1"       # Chứa data thô
 DEST_BUCKET = "bucket2"         # Chứa data sạch
 SOURCE_FOLDER = "batch/"        # Chỉ xử lý dữ liệu trong folder 'batch'
 
-# ================= HÀM LÀM SẠCH (GIỮ NGUYÊN) =================
+# HÀM LÀM SẠCH (GIỮ NGUYÊN)
 def clean_salary(salary_str):
     if pd.isna(salary_str) or salary_str == "Thoả thuận":
         return 0, 0, "VND" #Trả về mức lương tối thiểu, tối đa và loại tiền tệ chứ?
@@ -41,7 +41,7 @@ def clean_experience(exp_str):
     numbers = re.findall(r'\d+', str(exp_str))
     return int(numbers[0]) if numbers else 0
 
-# ================= CHƯƠNG TRÌNH CHÍNH =================
+# CHƯƠNG TRÌNH CHÍNH
 def main():
     print(f"🔌 Đang kết nối tới MinIO: {MINIO_ENDPOINT}...")
     client = Minio(
@@ -54,11 +54,11 @@ def main():
     # Đảm bảo bucket đích (bucket2) tồn tại
     if not client.bucket_exists(DEST_BUCKET):
         client.make_bucket(DEST_BUCKET)
-        print(f"✅ Đã tạo bucket đích: {DEST_BUCKET}")
+        print(f"Đã tạo bucket đích: {DEST_BUCKET}")
 
     try:
         # Lấy danh sách file CHỈ TRONG FOLDER 'batch/' của bucket1
-        print(f"📂 Đang quét thư mục '{SOURCE_FOLDER}' trong {SOURCE_BUCKET}...")
+        print(f"Đang quét thư mục '{SOURCE_FOLDER}' trong {SOURCE_BUCKET}...")
         objects = client.list_objects(SOURCE_BUCKET, prefix=SOURCE_FOLDER, recursive=True)
         
         found_file = False
@@ -69,7 +69,7 @@ def main():
                 continue
             
             found_file = True
-            print(f"\n📄 Tìm thấy file: {file_name}. Đang xử lý...")
+            print(f"\nTìm thấy file: {file_name}. Đang xử lý...")
 
             # 1. EXTRACT
             response = client.get_object(SOURCE_BUCKET, file_name)
@@ -86,7 +86,7 @@ def main():
                     print(f"⚠️ Cấu trúc JSON lạ, bỏ qua.")
                     continue
             except Exception as e:
-                print(f"❌ Lỗi đọc JSON: {e}")
+                print(f"Lỗi đọc JSON: {e}")
                 continue
 
             # 2. TRANSFORM
@@ -106,7 +106,7 @@ def main():
             
             final_df = df[['company', 'location', 'min_salary', 'max_salary', 'currency', 'years_of_experience', 'job_description', 'requirements', 'benefits']]
             
-            print(f"   ✅ Đã chuẩn hóa {len(final_df)} dòng dữ liệu.")
+            print(f"Đã chuẩn hóa {len(final_df)} dòng dữ liệu.")
 
             # 3. LOAD (Giữ nguyên cấu trúc thư mục sang bucket2)
             # batch/job.json -> batch/job.parquet
@@ -123,13 +123,13 @@ def main():
                 length=parquet_buffer.getbuffer().nbytes,
                 content_type="application/octet-stream"
             )
-            print(f"   🚀 Đã đẩy sang: {DEST_BUCKET}/{new_file_name}")
+            print(f"Đã đẩy sang: {DEST_BUCKET}/{new_file_name}")
 
         if not found_file:
             print(f"⚠️ Không tìm thấy file JSON nào trong '{SOURCE_BUCKET}/{SOURCE_FOLDER}'. Hãy kiểm tra lại MinIO.")
 
     except Exception as e:
-        print(f"❌ Lỗi: {e}")
+        print(f"Lỗi: {e}")
 
 if __name__ == "__main__":
     main()

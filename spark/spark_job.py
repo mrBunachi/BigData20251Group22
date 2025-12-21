@@ -1,8 +1,10 @@
+import sys
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col
+import pyspark.sql.functions as f
 from pyspark.sql.types import StructType, StringType
 
-# 1. Schema dữ liệu
+# 1. Schema dữ liệu (TIẾNG VIỆT - Khớp 100% với Kafka)
 job_schema = StructType() \
     .add("Tên công việc", StringType()) \
     .add("Tên công ty", StringType()) \
@@ -13,12 +15,14 @@ job_schema = StructType() \
     .add("Yêu cầu ứng viên", StringType()) \
     .add("Quyền lợi", StringType()) \
     .add("Địa điểm làm việc", StringType()) \
+    .add("Địa điểm làm việc(đã được cập nhật theo Danh mục Hành chính mới)", StringType()) \
+    .add("Thời gian làm việc", StringType()) \
     .add("Cách thức ứng tuyển", StringType()) \
-    .add("ingest_time", StringType()) 
+    .add("ingest_time", StringType())
 
 # 2. Khởi tạo Spark
 spark = SparkSession.builder \
-    .appName("IT Jobs Splitting") \
+    .appName("IT Jobs Ingestion") \
     .config("spark.hadoop.fs.s3a.endpoint", "http://minio-service.bigdata.svc:9000") \
     .config("spark.hadoop.fs.s3a.access.key", "admin") \
     .config("spark.hadoop.fs.s3a.secret.key", "password123") \
@@ -30,17 +34,15 @@ spark = SparkSession.builder \
 spark.sparkContext.setLogLevel("WARN")
 
 # 3. Đọc từ Kafka
-TOPICS = "itjobs_history,itjobs_live"
-
 df_kafka = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "kafka-service:9092") \
-    .option("subscribe", TOPICS) \
+    .option("subscribe", "itjobs_history,itjobs_live") \
     .option("startingOffsets", "earliest") \
-    .option("maxOffsetsPerTrigger", 200) \
+    .option("maxOffsetsPerTrigger", 500) \
     .load()
 
-# 4. Parse JSON
+# 4. Parse & Rename (QUAN TRỌNG: Đổi tên cột tại đây)
 df_parsed = df_kafka.select(
     col("topic"),
     from_json(col("value").cast("string"), job_schema).alias("data"),
@@ -53,24 +55,20 @@ df_parsed = df_kafka.select(
     col("data.`Địa điểm`").alias("location"),
     col("data.`Kinh nghiệm`").alias("experience"),
     col("data.`Mô tả công việc`").alias("job_description"),
+    col("data.`Yêu cầu ứng viên`").alias("requirements"),
+    col("data.`Quyền lợi`").alias("benefits"),
+    # Xử lý trường hợp có 2 loại cột địa điểm (ưu tiên cột mới nếu có)
+    f.coalesce(col("data.`Địa điểm làm việc`"), col("data.`Địa điểm làm việc(đã được cập nhật theo Danh mục Hành chính mới)`")).alias("workplace"),
+    col("data.`Thời gian làm việc`").alias("working_time"),
+    col("data.`Cách thức ứng tuyển`").alias("apply_method"),
     col("kafka_timestamp")
 )
 
-# 5. Tách luồng dữ liệu (Branching)
+# 5. Tách luồng và ghi MinIO
 
-# Luồng 1: Dữ liệu lịch sử -> Folder /batch
-df_history = df_parsed.filter(col("topic") == "itjobs_history").drop("topic")
-
-# Luồng 2: Dữ liệu live -> Folder /streaming
-df_live = df_parsed.filter(col("topic") == "itjobs_live").drop("topic")
-
-print(f"Spark đang lắng nghe topics [{TOPICS}] và phân loại vào batch/streaming...")
-
-# 6. Ghi xuống MinIO
-
-# --- LUỒNG 1: BATCH (HISTORY) ---
-# Thêm trigger(availableNow=True) để chạy hết data thì DỪNG
-query_history = df_history.writeStream \
+# (Batch History) - Chạy hết data hiện có rồi tự dừng
+query_history = df_parsed.filter(col("topic") == "itjobs_history") \
+    .writeStream \
     .format("json") \
     .option("path", "s3a://bucket1/batch/") \
     .option("checkpointLocation", "s3a://bucket1/checkpoints/history_batch/") \
@@ -78,30 +76,19 @@ query_history = df_history.writeStream \
     .trigger(availableNow=True) \
     .start()
 
-print("--> Đã khởi động luồng History (Chế độ Batch: Chạy xong sẽ tự dừng)")
-
-# --- LUỒNG 2: STREAMING (LIVE) ---
-# Luồng này chạy liên tục (Mặc định)
-query_live = df_live.writeStream \
+# (Live Streaming) - Chạy vĩnh viễn
+query_live = df_parsed.filter(col("topic") == "itjobs_live") \
+    .writeStream \
     .format("json") \
     .option("path", "s3a://bucket1/streaming/") \
     .option("checkpointLocation", "s3a://bucket1/checkpoints/live_streaming/") \
     .outputMode("append") \
     .start()
 
-print("--> Đã khởi động luồng Live (Chế độ Streaming: Chạy vĩnh viễn)")
+print("--> Đang chạy Ingestion (Spark Job)...")
 
-# 7. QUAN TRỌNG: Chờ luồng Live, không dùng awaitAnyTermination()
-# Lý do: Nếu dùng awaitAnyTermination(), khi query_history chạy xong, 
-# cả chương trình sẽ đóng lại => query_live cũng chết theo.
+# Chờ luồng Live chạy
 try:
     query_live.awaitTermination()
 except Exception as e:
-    print(f"Luồng Live bị lỗi: {e}")
-
-# In kết quả ra màn hình log của Spark Driver
-# query = df_parsed.writeStream \
-#     .format("console") \
-#     .outputMode("append") \
-#     .option("truncate", "false") \
-#     .start()
+    print(f"Error: {e}")
