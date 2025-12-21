@@ -75,3 +75,120 @@ Trên máy Master, kiểm tra danh sách node:
 ```bash
 sudo kubectl get nodes -o wide
 ```
+
+# Setup MinIO
+Khi bạn chạy 4 Replicas, Kubernetes sẽ rải đều mỗi máy 1 Pod.
+
+Máy 101 (Master): Tốn 9GB đĩa cứng.
+
+Máy 104 (Agent 1): Tốn 9GB đĩa cứng.
+
+Máy 105 (Agent 2): Tốn 9GB đĩa cứng.
+
+Máy 106 (Agent 3): Tốn 9GB đĩa cứng.
+
+Tổng cộng: 36GB được cấp phát, nhưng nhờ cơ chế Erasure Coding, bạn sẽ có 18GB dung lượng thực tế có thể sử dụng và hệ thống chịu lỗi được ngay cả khi 2 máy bất kỳ bị sập.
+
+## 🚀 Cấu hình 4 Replicas - Điều hướng về Node 
+Chúng ta sẽ cấu hình để Master tham gia lưu trữ, nhưng mọi thông tin điều hướng (Redirect) sẽ trỏ về IP của máy 104.
+### Bước 1: Thực hiện trên nút Master: Cho phép Master chạy Pod dữ liệu
+Mặc định K3s có thể chặn không cho Pod chạy trên Master (Taint). Hãy chạy lệnh này để chắc chắn Master sẵn sàng nhận Pod:
+```bash
+kubectl taint nodes ubuntu24-nn-virtualbox node-role.kubernetes.io/master:NoSchedule-
+kubectl taint nodes ubuntu24-nn-virtualbox node-role.kubernetes.io/control-plane:NoSchedule-
+```
+### Bước 2: Tạo file YAML cấu hình 4 bản ghi
+```bash
+nano minio-distributed-4nodes.yaml
+```
+Nội dung:
+```YAML
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bigdata
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-service
+  namespace: bigdata
+spec:
+  type: NodePort
+  selector:
+    app: minio
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+      nodePort: 30000
+    - name: console
+      port: 9001
+      targetPort: 9001
+      nodePort: 30001
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio
+  namespace: bigdata
+spec:
+  serviceName: minio-service
+  replicas: 4 # Phân tán ra 4 máy (101, 104, 105, 106)
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      # Rải đều Pod: Mỗi máy chỉ chứa duy nhất 1 bản MinIO
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values: ["minio"]
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: minio
+        image: minio/minio:latest
+        args:
+        - server
+        - http://minio-{0...3}.minio-service.bigdata.svc.cluster.local/data
+        - --console-address
+        - :9001
+        env:
+        - name: MINIO_ROOT_USER
+          value: "admin"
+        - name: MINIO_ROOT_PASSWORD
+          value: "password123"
+        # --- THIẾT LẬP NODE 104 LÀM QUẢN LÝ CHÍNH ---
+        - name: MINIO_BROWSER_REDIRECT_URL
+          value: "http://192.168.56.104:30001"
+        volumeMounts:
+        - name: data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "local-path"
+      resources:
+        requests:
+          storage: 9Gi
+```
+### Bước 3: Triển khai và xác nhận
+Chạy lệnh ```kubectl apply -f minio-distributed-4nodes.yaml```
+
+Kiểm tra các Pod đã rải đều chưa:
+```bash
+kubectl get pods -n bigdata -o wide
+```
+Bạn sẽ thấy 4 Pods chạy trên 4 Node khác nhau: Master (.101), datanode1 (.104), datanode2 (.105), datanode3 (.106).
+
+Giờ bạn chỉ cần vào địa chỉ ```http://192.168.56.104:30001``` là xong, trêm bất cứ máy nào trong cụm, hoặc trên Window (nếu dùng Host-only Adapter).
