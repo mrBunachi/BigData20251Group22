@@ -4,7 +4,7 @@ from pyspark.sql.functions import from_json, col
 import pyspark.sql.functions as f
 from pyspark.sql.types import StructType, StringType
 
-# 1. Schema dữ liệu (TIẾNG VIỆT - Khớp 100% với Kafka)
+# 1. Schema dữ liệu từ Kafka
 job_schema = StructType() \
     .add("Tên công việc", StringType()) \
     .add("Tên công ty", StringType()) \
@@ -42,7 +42,7 @@ df_kafka = spark.readStream \
     .option("maxOffsetsPerTrigger", 500) \
     .load()
 
-# 4. Parse & Rename (QUAN TRỌNG: Đổi tên cột tại đây)
+# 4. Parse & Rename (VN -> EN Trung gian)
 df_parsed = df_kafka.select(
     col("topic"),
     from_json(col("value").cast("string"), job_schema).alias("data"),
@@ -57,16 +57,14 @@ df_parsed = df_kafka.select(
     col("data.`Mô tả công việc`").alias("job_description"),
     col("data.`Yêu cầu ứng viên`").alias("requirements"),
     col("data.`Quyền lợi`").alias("benefits"),
-    # Xử lý trường hợp có 2 loại cột địa điểm (ưu tiên cột mới nếu có)
+    # Gom 2 cột địa điểm làm việc thành 1 cột workplace
     f.coalesce(col("data.`Địa điểm làm việc`"), col("data.`Địa điểm làm việc(đã được cập nhật theo Danh mục Hành chính mới)`")).alias("workplace"),
     col("data.`Thời gian làm việc`").alias("working_time"),
     col("data.`Cách thức ứng tuyển`").alias("apply_method"),
     col("kafka_timestamp")
 )
 
-# 5. Tách luồng và ghi MinIO
-
-# (Batch History) - Chạy hết data hiện có rồi tự dừng
+# 5. Tách luồng và ghi MinIO (Chỉ lấy itjobs_history vào batch)
 query_history = df_parsed.filter(col("topic") == "itjobs_history") \
     .writeStream \
     .format("json") \
@@ -76,7 +74,7 @@ query_history = df_parsed.filter(col("topic") == "itjobs_history") \
     .trigger(availableNow=True) \
     .start()
 
-# (Live Streaming) - Chạy vĩnh viễn
+# Luồng live nếu muốn backup raw data thì giữ, không thì có thể comment lại
 query_live = df_parsed.filter(col("topic") == "itjobs_live") \
     .writeStream \
     .format("json") \
@@ -87,7 +85,6 @@ query_live = df_parsed.filter(col("topic") == "itjobs_live") \
 
 print("--> Đang chạy Ingestion (Spark Job)...")
 
-# Chờ luồng Live chạy
 try:
     query_live.awaitTermination()
 except Exception as e:

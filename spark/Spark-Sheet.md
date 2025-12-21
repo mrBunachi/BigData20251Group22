@@ -78,6 +78,20 @@ JARS="/opt/spark/jars/kafka-clients-3.4.1.jar,\
   --executor-memory 2G \
   --executor-cores 1 \
   /opt/spark/spark_job_batch.py
+
+# 5. Submit Job Streaming
+/opt/spark/bin/spark-submit \
+  --master spark://spark-master-svc:7077 \
+  --deploy-mode client \
+  --name "IT Jobs Stream (MinIO + Mongo)" \
+  --packages org.mongodb.spark:mongo-spark-connector_2.12:10.2.1 \
+  --jars $JARS \
+  --conf spark.driver.host=$(hostname -i) \
+  --conf spark.driver.bindAddress=0.0.0.0 \
+  --driver-memory 512M \
+  --executor-memory 2G \
+  --executor-cores 2 \
+  /opt/spark/spark_job_stream.py
 ```
 
 ## **Update Code**
