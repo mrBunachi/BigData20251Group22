@@ -41,7 +41,7 @@ clean_salary_udf = udf(clean_salary_logic, salary_schema)
 clean_exp_udf = udf(clean_experience_logic, IntegerType())
 
 # 2. CẤU HÌNH MONGODB
-MONGO_URI = "mongodb+srv://bigData:bigGroup22@bigdata.uaojt2r.mongodb.net/?retryWrites=true&w=majority"
+MONGO_URI = "mongodb+srv://bigData:bigGroup22@bigdata.uaojt2r.mongodb.net/?retryWrites=true&w=majority&connectTimeoutMS=30000&socketTimeoutMS=30000&serverSelectionTimeoutMS=30000"
 MONGO_DB = "serving"
 MONGO_COLLECTION = "jobs_realtime"
 
@@ -55,8 +55,9 @@ def create_spark_session():
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
         .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false") \
         .config("spark.sql.parquet.compression.codec", "snappy") \
-        .config("spark.mongodb.input.uri", MONGO_URI) \
-        .config("spark.mongodb.output.uri", MONGO_URI)
+        .config("spark.mongodb.connection.uri", MONGO_URI) \
+        .config("spark.mongodb.database", MONGO_DB) \
+        .config("spark.mongodb.collection", MONGO_COLLECTION)
     return builder.getOrCreate()
 
 # 3. HÀM GHI ĐA ĐÍCH (FOREACHBATCH)
@@ -88,6 +89,7 @@ def write_to_sinks(batch_df, batch_id):
                 .format("mongodb") \
                 .mode("append") \
                 .option("database", MONGO_DB) \
+                .option("uri", MONGO_URI) \
                 .option("collection", MONGO_COLLECTION) \
                 .save()
             print("   [MongoDB] Write Success.")
@@ -175,6 +177,7 @@ def main():
     query = final_df.writeStream \
         .foreachBatch(write_to_sinks) \
         .option("checkpointLocation", "s3a://bucket2/checkpoints/streaming_kafka_mongo_v1/") \
+        .trigger(processingTime='60 seconds') \
         .start()
 
     query.awaitTermination()
