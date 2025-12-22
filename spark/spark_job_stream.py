@@ -7,6 +7,8 @@ import re
 
 # 1. LOGIC LÀM SẠCH
 def clean_salary_logic(salary_str):
+    USD_TO_VND_RATE = 26340  # Tỷ giá quy đổi
+    
     if salary_str is None or str(salary_str).strip() == "" or salary_str == "Thoả thuận":
         return None, None, "VND"
     s = str(salary_str).lower().replace(",", "").replace(".", "")
@@ -19,9 +21,19 @@ def clean_salary_logic(salary_str):
         if "tới" in s or "up to" in s: max_sal = numbers[0]
         elif "từ" in s: min_sal = numbers[0]
         else: max_sal = numbers[0]
-    if currency == "VND":
+    
+    # Chuyển đổi USD sang VND
+    if currency == "USD":
+        if min_sal > 0:
+            min_sal *= USD_TO_VND_RATE
+        if max_sal > 0:
+            max_sal *= USD_TO_VND_RATE
+        currency = "VND"  # Đổi currency thành VND sau khi quy đổi
+    else:
+        # Chuẩn hóa VND
         if 0 < min_sal < 1000: min_sal *= 1000000
         if 0 < max_sal < 1000: max_sal *= 1000000
+    
     final_min = int(min_sal) if min_sal > 0 else None
     final_max = int(max_sal) if max_sal > 0 else None
     return final_min, final_max, currency

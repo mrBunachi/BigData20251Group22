@@ -54,7 +54,7 @@ def load_data_from_folder():
                     # Lọc bỏ các bản ghi có "Tên công việc" là "Không xác định"
                     valid_jobs = [
                         job for job in data 
-                        if job.get('Tên công việc') != 'Không xác định'
+                        if job.get('Tên công việc', '') != 'Không xác định'
                     ]
                     
                     skipped = len(data) - len(valid_jobs)
