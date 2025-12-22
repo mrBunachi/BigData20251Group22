@@ -11,6 +11,9 @@
 ### Chạy 2 lệnh này tại terminal máy Master để cập nhật code mới vào bên trong Pod:
 
 ```bash
+# Nạp các thư viện cần thiết
+./jars_spark.sh
+
 # Lấy tên Master Pod và Worker Pod
 export MASTER_POD=$(kubectl get pods -n bigdata -l app=spark-master -o jsonpath='{.items[0].metadata.name}')
 kubectl exec -it $MASTER_POD -n bigdata -- ls -l /opt/spark/jars/ | grep -E "aws-java-sdk-bundle|commons-pool2|hadoop-aws|kafka-clients|spark-sql-kafka|spark-token-provider"
@@ -53,6 +56,12 @@ JARS="/opt/spark/jars/kafka-clients-3.4.1.jar,\
 /opt/spark/jars/hadoop-aws-3.3.4.jar,\
 /opt/spark/jars/aws-java-sdk-bundle-1.12.262.jar"
 
+#Mongo Jars cho luồng stream
+MONGO_JARS="/opt/spark/jars/mongo-deps/mongo-spark-connector_2.12-10.4.0.jar,\
+/opt/spark/jars/mongo-deps/mongodb-driver-sync-5.1.1.jar,\
+/opt/spark/jars/mongo-deps/mongodb-driver-core-5.1.1.jar,\
+/opt/spark/jars/mongo-deps/bson-5.1.1.jar"
+
 # 3. Chạy lệnh Submit với tham số --jars
 /opt/spark/bin/spark-submit \
   --master spark://spark-master-svc:7077 \
@@ -84,8 +93,7 @@ JARS="/opt/spark/jars/kafka-clients-3.4.1.jar,\
   --master spark://spark-master-svc:7077 \
   --deploy-mode client \
   --name "IT Jobs Stream (MinIO + Mongo)" \
-  --packages org.mongodb.spark:mongo-spark-connector_2.12:10.2.1 \
-  --jars $JARS \
+  --jars "$JARS,$MONGO_JARS" \
   --conf spark.driver.host=$(hostname -i) \
   --conf spark.driver.bindAddress=0.0.0.0 \
   --driver-memory 512M \
@@ -102,3 +110,4 @@ Nếu cần sửa lại code, hãy làm đúng thứ tự này:
 - **Sửa File**: Sửa file `spark_job.py` ở máy Master
 - **Copy lại**: Chạy lại **Bước 2**
 - **Chạy lại**: Chạy lại **Bước 3**
+- **Dọn pod**: `kubectl delete pods -n bigdata --all` ở máy master, `sudo rm -rf /tmp/spark-worker-data/*` ở máy spark

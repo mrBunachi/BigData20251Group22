@@ -2,6 +2,7 @@ import json
 import time
 import sys
 import os
+import random
 from kafka import KafkaProducer
 
 KAFKA_BROKER = '192.168.56.104:30092' 
@@ -11,8 +12,8 @@ DATA_FOLDER = '../data'
 producer = KafkaProducer(
     bootstrap_servers=[KAFKA_BROKER],
     value_serializer=lambda x: json.dumps(x).encode('utf-8'),
-    batch_size=16384,
-    linger_ms=10 
+    batch_size=32768,
+    linger_ms=50
 )
 
 def load_data_from_folder():
@@ -53,7 +54,7 @@ def load_data_from_folder():
                     # Lọc bỏ các bản ghi có "Tên công việc" là "Không xác định"
                     valid_jobs = [
                         job for job in data 
-                        if job.get('Tên công việc') != 'Không xác định'
+                        if job.get('Tên công việc', '') != 'Không xác định'
                     ]
                     
                     skipped = len(data) - len(valid_jobs)
@@ -82,11 +83,11 @@ def run_batch_mode(jobs):
     
     for i, job in enumerate(jobs):
         job['ingest_time'] = str(time.time())
-        
         producer.send(TOPIC, value=job)
         
-        if (i + 1) % 100 == 0:
+        if (i + 1) % 500 == 0:
             print(f" -> Đã gửi {i + 1} jobs...")
+            producer.flush() # Flush định kỳ để tránh quá tải bộ nhớ
             
     producer.flush()
     print(f"Đã nạp xong {len(jobs)} bản ghi vào lịch sử.")
@@ -95,17 +96,29 @@ def run_batch_mode(jobs):
 def run_streaming_mode(jobs):
     TOPIC = 'itjobs_live'
     print(f"[STREAM MODE] Đang giả lập dữ liệu vào topic '{TOPIC}'...")
+    print("Chiến thuật: Gửi theo chùm (Burst) để tối ưu cho Spark Trigger 60s")
     
+    # Cấu hình giả lập
+    BURST_SIZE = 50
+    SLEEP_TIME = 10 
+
     while True:
-        for job in jobs:
+        if len(jobs) < BURST_SIZE:
+            current_batch = jobs
+        else:
+            current_batch = random.sample(jobs, BURST_SIZE)
+
+        print(f"--- Đang bắn chùm {len(current_batch)} bản ghi ---")
+        
+        for job in current_batch:
             job['ingest_time'] = str(time.time())
-            
             producer.send(TOPIC, value=job)
-            
-            title = job.get('Tên công việc') or 'Unknown Job'
-            print(f" -> Live Job: {title}")
-            
-            time.sleep(2) 
+        
+        # Đẩy dữ liệu đi ngay lập tức
+        producer.flush()
+        
+        print(f" -> Đã gửi xong {len(current_batch)} tin. Ngủ {SLEEP_TIME} giây...")
+        time.sleep(SLEEP_TIME)
 
 if __name__ == "__main__":
     data = load_data_from_folder()

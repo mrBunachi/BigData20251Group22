@@ -7,6 +7,8 @@ import re
 
 # 1. LOGIC LÀM SẠCH
 def clean_salary_logic(salary_str):
+    USD_TO_VND_RATE = 26340  # Tỷ giá quy đổi
+    
     if salary_str is None or str(salary_str).strip() == "" or salary_str == "Thoả thuận":
         return None, None, "VND"
     s = str(salary_str).lower().replace(",", "").replace(".", "")
@@ -19,9 +21,19 @@ def clean_salary_logic(salary_str):
         if "tới" in s or "up to" in s: max_sal = numbers[0]
         elif "từ" in s: min_sal = numbers[0]
         else: max_sal = numbers[0]
-    if currency == "VND":
+    
+    # Chuyển đổi USD sang VND
+    if currency == "USD":
+        if min_sal > 0:
+            min_sal *= USD_TO_VND_RATE
+        if max_sal > 0:
+            max_sal *= USD_TO_VND_RATE
+        currency = "VND"  # Đổi currency thành VND sau khi quy đổi
+    else:
+        # Chuẩn hóa VND
         if 0 < min_sal < 1000: min_sal *= 1000000
         if 0 < max_sal < 1000: max_sal *= 1000000
+    
     final_min = int(min_sal) if min_sal > 0 else None
     final_max = int(max_sal) if max_sal > 0 else None
     return final_min, final_max, currency
@@ -41,7 +53,7 @@ clean_salary_udf = udf(clean_salary_logic, salary_schema)
 clean_exp_udf = udf(clean_experience_logic, IntegerType())
 
 # 2. CẤU HÌNH MONGODB
-MONGO_URI = "mongodb+srv://bigData:bigGroup22@bigdata.uaojt2r.mongodb.net/?retryWrites=true&w=majority"
+MONGO_URI = "mongodb+srv://bigData:bigGroup22@bigdata.uaojt2r.mongodb.net/?retryWrites=true&w=majority&connectTimeoutMS=30000&socketTimeoutMS=30000&serverSelectionTimeoutMS=30000"
 MONGO_DB = "serving"
 MONGO_COLLECTION = "jobs_realtime"
 
@@ -55,8 +67,9 @@ def create_spark_session():
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
         .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false") \
         .config("spark.sql.parquet.compression.codec", "snappy") \
-        .config("spark.mongodb.input.uri", MONGO_URI) \
-        .config("spark.mongodb.output.uri", MONGO_URI)
+        .config("spark.mongodb.connection.uri", MONGO_URI) \
+        .config("spark.mongodb.database", MONGO_DB) \
+        .config("spark.mongodb.collection", MONGO_COLLECTION)
     return builder.getOrCreate()
 
 # 3. HÀM GHI ĐA ĐÍCH (FOREACHBATCH)
@@ -88,6 +101,7 @@ def write_to_sinks(batch_df, batch_id):
                 .format("mongodb") \
                 .mode("append") \
                 .option("database", MONGO_DB) \
+                .option("uri", MONGO_URI) \
                 .option("collection", MONGO_COLLECTION) \
                 .save()
             print("   [MongoDB] Write Success.")
@@ -175,6 +189,7 @@ def main():
     query = final_df.writeStream \
         .foreachBatch(write_to_sinks) \
         .option("checkpointLocation", "s3a://bucket2/checkpoints/streaming_kafka_mongo_v1/") \
+        .trigger(processingTime='60 seconds') \
         .start()
 
     query.awaitTermination()

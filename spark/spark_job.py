@@ -37,7 +37,7 @@ spark.sparkContext.setLogLevel("WARN")
 df_kafka = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "kafka-service:9092") \
-    .option("subscribe", "itjobs_history,itjobs_live") \
+    .option("subscribe", "itjobs_history") \
     .option("startingOffsets", "earliest") \
     .option("maxOffsetsPerTrigger", 500) \
     .load()
@@ -74,18 +74,18 @@ query_history = df_parsed.filter(col("topic") == "itjobs_history") \
     .trigger(availableNow=True) \
     .start()
 
-# Luồng live nếu muốn backup raw data thì giữ, không thì có thể comment lại
-query_live = df_parsed.filter(col("topic") == "itjobs_live") \
-    .writeStream \
-    .format("json") \
-    .option("path", "s3a://bucket1/streaming/") \
-    .option("checkpointLocation", "s3a://bucket1/checkpoints/live_streaming/") \
-    .outputMode("append") \
-    .start()
+# Luồng live nếu muốn backup raw data
+# query_live = df_parsed.filter(col("topic") == "itjobs_live") \
+#     .writeStream \
+#     .format("json") \
+#     .option("path", "s3a://bucket1/streaming/") \
+#     .option("checkpointLocation", "s3a://bucket1/checkpoints/live_streaming/") \
+#     .outputMode("append") \
+#     .start()
 
 print("--> Đang chạy Ingestion (Spark Job)...")
 
 try:
-    query_live.awaitTermination()
+    query_history.awaitTermination()
 except Exception as e:
     print(f"Error: {e}")
