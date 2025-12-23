@@ -6,7 +6,7 @@ import time
 import re
 from datetime import datetime
 
-# ================= CẤU HÌNH HỆ THỐNG =================
+# CẤU HÌNH HỆ THỐNG
 MONGO_URI = "mongodb+srv://bigData:bigGroup22@bigdata.uaojt2r.mongodb.net/?retryWrites=true&w=majority"
 DB_NAME = "serving"
 COLLECTION_NAME = "jobs_realtime"
@@ -18,22 +18,22 @@ st.set_page_config(
     initial_sidebar_state="expanded" 
 )
 
-# ================= TỪ KHÓA SKILL (REGEX) =================
+# TỪ KHÓA SKILL (REGEX)
 SKILLS_MAPPING = {
-    # --- Lập trình ---
+    # Lập trình
     "Python": r"python", "Java": r"java\b", "JS/Node": r"javascript|js\b|node",
     "C/C++": r"\bc\+\+|\bc\b", "C#/.NET": r"c\#|\.net", "PHP": r"php", "Go": r"golang|go\b",
-    # --- Web / Frontend ---
+    # Web / Frontend
     "HTML/CSS": r"html|css", "React/Vue": r"react|vue", "Angular": r"angular",
-    # --- Database ---
+    # Database
     "SQL": r"sql", "NoSQL/Mongo": r"mongodb|mongo|nosql",
-    # --- Cloud / DevOps ---
+    # Cloud / DevOps
     "AWS/Cloud": r"aws|cloud|azure", "Docker/K8s": r"docker|kubernetes|k8s",
-    # --- Ngoại ngữ & Khác ---
+    # Ngoại ngữ & Khác
     "Excel": r"excel", "English/IELTS": r"english|ielts|toeic", "Japanese/JLPT": r"japanese|jlpt|n[1-5]\b"
 }
 
-# ================= HÀM XỬ LÝ (BACKEND) =================
+# HÀM XỬ LÝ (BACKEND)
 @st.cache_resource
 def init_connection():
     return MongoClient(MONGO_URI)
@@ -76,9 +76,9 @@ def extract_skills(df):
             
     return pd.DataFrame(list(skill_counts.items()), columns=['Skill', 'Count']).sort_values('Count', ascending=False)
 
-# ================= GIAO DIỆN DASHBOARD =================
+# GIAO DIỆN DASHBOARD
 
-# --- 1. SIDEBAR: BỘ LỌC & CẤU HÌNH REFRESH (MỚI) ---
+# 1. SIDEBAR: BỘ LỌC & CẤU HÌNH REFRESH (MỚI)
 st.sidebar.title("🎛️ Bộ Lọc & Cấu Hình")
 df_raw = get_data()
 
@@ -121,7 +121,7 @@ st.title("🚀 Real-time IT Jobs Dashboard")
 st.caption(f"Trạng thái: {'Đang chạy Real-time' if auto_refresh else 'Đang tạm dừng'} • Tần suất: {refresh_interval}s/lần")
 
 if not df.empty:
-    # --- KPI ---
+    # KPI SUMMARY
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Tổng tin", len(df))
     
@@ -141,7 +141,7 @@ if not df.empty:
 
     st.divider()
 
-    # --- BIỂU ĐỒ STREAMING ---
+    # BIỂU ĐỒ STREAMING
     st.subheader("📈 Xu hướng tin tuyển dụng")
     if 'ingested_at' in df.columns:
         df_trend = df.set_index('ingested_at').resample('H').size().reset_index(name='count')
@@ -149,7 +149,7 @@ if not df.empty:
                             title="Lượng tin đổ về theo thời gian", color_discrete_sequence=['#00CC96'])
         st.plotly_chart(fig_trend, use_container_width=True)
 
-    # --- PHÂN TÍCH SKILL & LEVEL ---
+    # PHÂN TÍCH SKILL & LEVEL
     c1, c2 = st.columns([2, 1])
     with c1:
         st.subheader("🛠️ Top Skill Hot Nhất")
@@ -165,7 +165,7 @@ if not df.empty:
         fig_lvl = px.pie(df, names='Level', hole=0.5)
         st.plotly_chart(fig_lvl, use_container_width=True)
 
-    # --- PHÂN TÍCH LƯƠNG & ĐỊA ĐIỂM ---
+    # PHÂN TÍCH LƯƠNG & ĐỊA ĐIỂM
     c3, c4 = st.columns(2)
     with c3:
         st.subheader("📍 Địa điểm")
@@ -182,14 +182,14 @@ if not df.empty:
         else:
             st.info("Chưa có đủ dữ liệu lương VND.")
 
-    # --- DỮ LIỆU CHI TIẾT ---
+    # DỮ LIỆU CHI TIẾT
     with st.expander("📋 Xem dữ liệu chi tiết"):
         st.dataframe(df.head(50), use_container_width=True)
 
 else:
     st.warning("⚠️ Đang chờ dữ liệu...")
 
-# ================= LOGIC AUTO REFRESH (MỚI) =================
+# LOGIC AUTO REFRESH (MỚI)
 if auto_refresh:
     time.sleep(refresh_interval)
     st.rerun()
