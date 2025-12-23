@@ -108,9 +108,9 @@ spec:
               memory: "2Gi"
               cpu: "2000m"
             limits:
-              # Giới hạn container ở mức 5.5GB (để lại 2.5GB cho OS)
+              # Giới hạn container ở mức 5.5GB
               memory: "5500Mi"
-              # Giới hạn CPU ở 3.5 Core (để lại 0.5 Core cho OS thở)
+              # Giới hạn CPU ở 3.5 Core
               cpu: "3500m"
 
           env:

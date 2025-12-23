@@ -78,7 +78,6 @@ def write_to_sinks(batch_df, batch_id):
     Hàm này sẽ được gọi cho mỗi Micro-Batch.
     Tại đây chúng ta ghi DataFrame vào cả MinIO và MongoDB.
     """
-    # Cache lại vì chúng ta sẽ dùng DF này 2 lần (cho 2 đích đến)
     batch_df.persist()
     
     count = batch_df.count()
@@ -139,7 +138,6 @@ def main():
         .option("kafka.bootstrap.servers", "kafka-service:9092") \
         .option("subscribe", "itjobs_live") \
         .option("startingOffsets", "earliest") \
-        .option("maxOffsetsPerTrigger", 500) \
         .load()
 
     # Parse & Rename
@@ -189,7 +187,7 @@ def main():
     query = final_df.writeStream \
         .foreachBatch(write_to_sinks) \
         .option("checkpointLocation", "s3a://bucket2/checkpoints/streaming_kafka_mongo_v1/") \
-        .trigger(processingTime='60 seconds') \
+        .trigger(processingTime='30 seconds') \
         .start()
 
     query.awaitTermination()

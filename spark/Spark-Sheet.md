@@ -16,10 +16,10 @@
 
 # Lấy tên Master Pod và Worker Pod
 export MASTER_POD=$(kubectl get pods -n bigdata -l app=spark-master -o jsonpath='{.items[0].metadata.name}')
-kubectl exec -it $MASTER_POD -n bigdata -- ls -l /opt/spark/jars/ | grep -E "aws-java-sdk-bundle|commons-pool2|hadoop-aws|kafka-clients|spark-sql-kafka|spark-token-provider"
+kubectl exec -it $MASTER_POD -n bigdata -- ls -l /opt/spark/jars/ | grep -E "aws-java-sdk-bundle|commons-pool2|hadoop-aws|kafka-clients|spark-sql-kafka|spark-token-provider|mongo-spark-connector|mongodb-driver-sync|mongodb-driver-core|bson"
 
 export WORKER_POD=$(kubectl get pods -n bigdata -l app=spark-worker -o jsonpath='{.items[0].metadata.name}')
-kubectl exec -it $WORKER_POD -n bigdata -- ls -l /opt/spark/jars/ | grep -E "aws-java-sdk-bundle|commons-pool2|hadoop-aws|kafka-clients|spark-sql-kafka|spark-token-provider"
+kubectl exec -it $WORKER_POD -n bigdata -- ls -l /opt/spark/jars/ | grep -E "aws-java-sdk-bundle|commons-pool2|hadoop-aws|kafka-clients|spark-sql-kafka|spark-token-provider|mongo-spark-connector|mongodb-driver-sync|mongodb-driver-core|bson"
 
 # 1. Copy ghi đè file vào trong Pod
 # a. Job 1 (Đọc ghi MinIO)
