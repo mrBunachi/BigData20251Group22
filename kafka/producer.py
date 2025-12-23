@@ -96,17 +96,19 @@ def run_batch_mode(jobs):
 def run_streaming_mode(jobs):
     TOPIC = 'itjobs_live'
     print(f"[STREAM MODE] Đang giả lập dữ liệu vào topic '{TOPIC}'...")
-    print("Chiến thuật: Gửi theo chùm (Burst) để tối ưu cho Spark Trigger 60s")
     
     # Cấu hình giả lập
-    BURST_SIZE = 50
+    MIN_BURST_SIZE = 30
+    MAX_BURST_SIZE = 60
     SLEEP_TIME = 10 
 
     while True:
-        if len(jobs) < BURST_SIZE:
+        burst_size = random.randint(MIN_BURST_SIZE, MAX_BURST_SIZE)
+        
+        if len(jobs) < burst_size:
             current_batch = jobs
         else:
-            current_batch = random.sample(jobs, BURST_SIZE)
+            current_batch = random.sample(jobs, burst_size)
 
         print(f"--- Đang bắn chùm {len(current_batch)} bản ghi ---")
         
