@@ -6,7 +6,7 @@ import time
 import re
 from datetime import datetime
 
-# ================= CẤU HÌNH HỆ THỐNG =================
+# CẤU HÌNH HỆ THỐNG
 MONGO_URI = "mongodb+srv://bigData:bigGroup22@bigdata.uaojt2r.mongodb.net/?retryWrites=true&w=majority"
 DB_NAME = "serving"
 COLLECTION_NAME = "jobs_realtime"
@@ -18,22 +18,22 @@ st.set_page_config(
     initial_sidebar_state="expanded" 
 )
 
-# ================= TỪ KHÓA SKILL (REGEX) =================
+# TỪ KHÓA SKILL (REGEX)
 SKILLS_MAPPING = {
-    # --- Lập trình ---
+    # Lập trình
     "Python": r"python", "Java": r"java\b", "JS/Node": r"javascript|js\b|node",
     "C/C++": r"\bc\+\+|\bc\b", "C#/.NET": r"c\#|\.net", "PHP": r"php", "Go": r"golang|go\b",
-    # --- Web / Frontend ---
+    # Web / Frontend
     "HTML/CSS": r"html|css", "React/Vue": r"react|vue", "Angular": r"angular",
-    # --- Database ---
+    # Database
     "SQL": r"sql", "NoSQL/Mongo": r"mongodb|mongo|nosql",
-    # --- Cloud / DevOps ---
+    # Cloud / DevOps
     "AWS/Cloud": r"aws|cloud|azure", "Docker/K8s": r"docker|kubernetes|k8s",
-    # --- Ngoại ngữ & Khác ---
+    # Ngoại ngữ & Khác
     "Excel": r"excel", "English/IELTS": r"english|ielts|toeic", "Japanese/JLPT": r"japanese|jlpt|n[1-5]\b"
 }
 
-# ================= HÀM XỬ LÝ (BACKEND) =================
+# HÀM XỬ LÝ (BACKEND)
 @st.cache_resource
 def init_connection():
     return MongoClient(MONGO_URI)
@@ -59,7 +59,7 @@ def extract_level(text):
     if re.search(r'junior|nhân viên', text): return 'Junior/Mid'
     return 'Junior/Mid'
 
-# (MỚI) Hàm xác định Remote/Hybrid
+# Hàm xác định Remote/Hybrid
 def extract_work_mode(text):
     text = str(text).lower()
     if re.search(r'remote|từ xa|work from home|wfh', text): return 'Remote'
@@ -80,9 +80,9 @@ def extract_skills(df):
             
     return pd.DataFrame(list(skill_counts.items()), columns=['Skill', 'Count']).sort_values('Count', ascending=False)
 
-# ================= GIAO DIỆN DASHBOARD =================
+# GIAO DIỆN DASHBOARD
 
-# --- 1. SIDEBAR: BỘ LỌC & CẤU HÌNH ---
+# 1. SIDEBAR: BỘ LỌC & CẤU HÌNH
 st.sidebar.title("🎛️ Bộ Lọc & Cấu Hình")
 df_raw = get_data()
 df = pd.DataFrame()
@@ -95,7 +95,7 @@ if not df_raw.empty:
     df_raw['WorkMode'] = df_raw['full_text'].apply(extract_work_mode) # (MỚI)
     
     # 1.2 Widget Lọc
-    # (MỚI) Tìm kiếm từ khóa
+    # Tìm kiếm từ khóa
     search_query = st.sidebar.text_input("🔍 Tìm kiếm từ khóa (VD: Blockchain)", "")
     
     cities = ['Tất cả'] + list(df_raw['location'].unique()) if 'location' in df_raw.columns else ['Tất cả']
@@ -123,12 +123,12 @@ auto_refresh = st.sidebar.checkbox('Bật tự động làm mới', value=True)
 refresh_interval = st.sidebar.number_input('Chu kỳ (giây)', min_value=5, value=30, step=5)
 if st.sidebar.button('🔄 Refresh Thủ Công'): st.rerun()
 
-# --- 2. MAIN DASHBOARD ---
+# 2. MAIN DASHBOARD
 st.title("🚀 Real-time IT Jobs Dashboard")
 st.caption(f"Trạng thái: {'Real-time' if auto_refresh else 'Paused'} • {refresh_interval}s/lần")
 
 if not df.empty:
-    # --- KPI CARD ---
+    # KPI CARD
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Tổng tin tuyển dụng", len(df))
     
@@ -139,7 +139,7 @@ if not df.empty:
         if not df_sal.empty: avg_sal = df_sal['max_salary'].mean()
     col2.metric("Lương TB (VND)", f"{avg_sal:,.0f} đ")
     
-    # (MỚI) Đếm số lượng Remote
+    # Đếm số lượng Remote
     remote_count = len(df[df['WorkMode'] == 'Remote'])
     col3.metric("Job Remote/WFH", remote_count)
 
@@ -148,7 +148,7 @@ if not df.empty:
 
     st.divider()
 
-    # --- ROW 1: STREAMING TREND & WORK MODE (MỚI) ---
+    # ROW 1: STREAMING TREND & WORK MODE
     c1, c2 = st.columns([2, 1])
     with c1:
         st.subheader("📈 Xu hướng tin theo thời gian")
@@ -164,7 +164,7 @@ if not df.empty:
         fig_mode = px.pie(df, names='WorkMode', hole=0.5, color_discrete_sequence=px.colors.qualitative.Pastel)
         st.plotly_chart(fig_mode, use_container_width=True)
 
-    # --- ROW 2: SKILLS & TOP SALARY COMPANIES (MỚI) ---
+    # ROW 2: SKILLS & TOP SALARY COMPANIES
     c3, c4 = st.columns(2)
     with c3:
         st.subheader("🛠️ Top Skill Hot Nhất")
@@ -203,7 +203,7 @@ if not df.empty:
         else:
             st.info("Chưa có dữ liệu lương VND.")
 
-    # --- ROW 3: LEVEL & CHI TIẾT ---
+    # ROW 3: LEVEL & CHI TIẾT
     with st.expander("🎓 Phân tích Level & Dữ liệu chi tiết"):
         col_lvl, col_table = st.columns([1, 2])
         with col_lvl:
