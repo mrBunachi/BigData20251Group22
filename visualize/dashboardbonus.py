@@ -5,7 +5,7 @@ import plotly.express as px
 import time
 import re
 
-# ================= CẤU HÌNH =================
+# CẤU HÌNH
 MONGO_URI = "mongodb+srv://bigData:bigGroup22@bigdata.uaojt2r.mongodb.net/?retryWrites=true&w=majority"
 DB_NAME = "serving"
 COLLECTION_NAME = "jobs_realtime"
@@ -16,10 +16,10 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= TỪ KHÓA SKILL CẦN TÌM (REGEX) =================
+# TỪ KHÓA SKILL CẦN TÌM (REGEX)
 # Danh sách này giúp bắt dính cả chữ hoa, chữ thường, viết tắt
 SKILLS_MAPPING = {
-    # --- Lập trình ---
+    # Lập trình
     "Python": r"python",
     "Java": r"java\b", 
     "JavaScript": r"javascript|js\b",
@@ -29,20 +29,20 @@ SKILLS_MAPPING = {
     "PHP": r"php",
     "Go": r"golang|go\b",
     
-    # --- Web / Frontend ---
+    # Web / Frontend
     "HTML/CSS": r"html|css",
     "React": r"react",
     "Angular": r"angular",
     "Vue": r"vue",
     "NodeJS": r"node\.?js",
     
-    # --- Database ---
+    # Database
     "SQL": r"sql",
     "MySQL": r"mysql",
     "PostgreSQL": r"postgresql|postgres",
     "MongoDB": r"mongodb|mongo",
     
-    # --- Công cụ / Cloud ---
+    # Công cụ / Cloud
     "Excel": r"excel",
     "AWS": r"aws|amazon web services",
     "Docker": r"docker",
@@ -50,7 +50,7 @@ SKILLS_MAPPING = {
     "Git": r"git",
     "Linux": r"linux",
     
-    # --- Ngoại ngữ & Chứng chỉ ---
+    # Ngoại ngữ & Chứng chỉ
     "English": r"english|tiếng anh",
     "Japanese": r"japanese|tiếng nhật",
     "IELTS": r"ielts",
@@ -58,7 +58,7 @@ SKILLS_MAPPING = {
     "TOEIC": r"toeic"
 }
 
-# ================= HÀM XỬ LÝ =================
+# HÀM XỬ LÝ
 @st.cache_resource
 def init_connection():
     return MongoClient(MONGO_URI)
@@ -93,7 +93,7 @@ def extract_skills(df):
             
     return pd.DataFrame(list(skill_counts.items()), columns=['Skill', 'Count']).sort_values('Count', ascending=False)
 
-# ================= GIAO DIỆN DASHBOARD =================
+# GIAO DIỆN DASHBOARD
 st.title("🚀 Real-time IT Jobs Dashboard")
 st.markdown("Hệ thống giám sát tuyển dụng IT (Kafka -> Spark -> MongoDB -> Streamlit)")
 
@@ -103,7 +103,7 @@ if st.button('🔄 Làm mới dữ liệu'):
 df = get_data()
 
 if not df.empty:
-    # ---------------- PHẦN 1: KPI CŨ (GIỮ NGUYÊN) ----------------
+    # PHẦN 1: KPI CŨ 
     col1, col2, col3 = st.columns(3)
     col1.metric("Tổng tin tuyển dụng", len(df))
     
@@ -119,7 +119,7 @@ if not df.empty:
 
     st.divider()
 
-    # ---------------- PHẦN 2: SKILL MỚI (THÊM VÀO ĐÂY) ----------------
+    # PHẦN 2: SKILL MỚI 
     st.subheader("🛠️ Top Kỹ năng & Công nghệ đang Hot")
     df_skills = extract_skills(df)
     
@@ -134,7 +134,7 @@ if not df.empty:
 
     st.divider()
 
-    # ---------------- PHẦN 3: BIỂU ĐỒ CŨ (GIỮ NGUYÊN) ----------------
+    # PHẦN 3: BIỂU ĐỒ CŨ
     # Lọc dữ liệu lương để vẽ biểu đồ
     df_salary = pd.DataFrame()
     if 'max_salary' in df.columns and 'currency' in df.columns:
@@ -142,7 +142,7 @@ if not df.empty:
 
     col_chart1, col_chart2 = st.columns(2)
     
-    # Biểu đồ Địa điểm (Cũ)
+    # Biểu đồ Địa điểm
     with col_chart1:
         st.subheader("📍 Phân bố Địa điểm")
         loc_col = 'location' if 'location' in df.columns else 'Địa điểm'
@@ -152,7 +152,7 @@ if not df.empty:
             fig_loc = px.pie(loc_counts, values='count', names='location', hole=0.4)
             st.plotly_chart(fig_loc, use_container_width=True)
 
-    # Biểu đồ Lương (Cũ)
+    # Biểu đồ Lương
     with col_chart2:
         st.subheader("💰 Phân bố Lương (VND)")
         if not df_salary.empty:
@@ -162,7 +162,7 @@ if not df.empty:
         else:
             st.info("Chưa có đủ dữ liệu lương VND.")
 
-    # ---------------- PHẦN 4: TOP CÔNG TY CŨ (GIỮ NGUYÊN) ----------------
+    # PHẦN 4: TOP CÔNG TY
     st.subheader("🏆 Top Công ty tuyển dụng")
     comp_col = 'company' if 'company' in df.columns else 'Tên công ty'
     if comp_col in df.columns:
@@ -173,7 +173,7 @@ if not df.empty:
         fig_bar.update_layout(yaxis={'categoryorder':'total ascending'})
         st.plotly_chart(fig_bar, use_container_width=True)
 
-    # ---------------- PHẦN 5: BẢNG DỮ LIỆU CŨ (GIỮ NGUYÊN) ----------------
+    # PHẦN 5: BẢNG DỮ LIỆU
     with st.expander("📋 Xem dữ liệu chi tiết"):
         st.dataframe(df.head(20), use_container_width=True)
 
