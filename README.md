@@ -5,10 +5,8 @@
 * Trịnh Hoàng Chi
 * Trần Thế Khiêm
 * Phạm Minh Toàn
-### 2. Sơ đồ Kiến trúc Hệ thống
-![Sơ đồ luồng dữ liệu](images/workflow.png)
 
-### 3. Đáp ứng tiêu chí
+### 2. Đáp ứng tiêu chí
 * Data Ingestion → Producer App (Crawler) + Kafka/Redpanda.
 * Data Processing → Spark Batch (Ingestion & ETL Python Code).
 * Stream Processing → Realtime Metrics (Web Dashboard via MongoDB).
